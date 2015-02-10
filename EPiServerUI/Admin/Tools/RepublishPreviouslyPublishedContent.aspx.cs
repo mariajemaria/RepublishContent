@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 using EPiServer;
 using EPiServer.Core;
 using EPiServer.Data.Entity;
-using EPiServer.DataAbstraction;
 using EPiServer.DataAccess;
 using EPiServer.PlugIn;
-using EPiServer.ServiceLocation;
+using EPiServer.Security;
+using EPiServer.Shell.WebForms;
 
 namespace PROJECT.EPiServerUI.Admin.Tools
 {
@@ -19,21 +18,29 @@ namespace PROJECT.EPiServerUI.Admin.Tools
         Description = "Goes through the whole tree starting from the root and republishes all content (that was previously published)",
         Area = PlugInArea.AdminMenu,
         Url = "~/EPiServerUI/Admin/Tools/RepublishPreviouslyPublishedContent.aspx")]
-    public partial class RepublishPreviouslyPublishedContent : Page
+    public partial class RepublishPreviouslyPublishedContent : ContentWebFormsBase
     {
-        private IContentRepository _contentRepository;
-        private IContentTypeRepository _contentTypeRepository;
+        public override AccessLevel RequiredAccess()
+        {
+            return AccessLevel.Administer;
+        }
+
+        protected override bool SetMasterPageOnPreInit
+        {
+            get
+            {
+                return false;
+            }
+        }
         
         protected override void OnInit(EventArgs e)
         {
             EnableViewState = false;
-
-            _contentRepository = ServiceLocator.Current.GetInstance<IContentRepository>();
-            _contentTypeRepository = ServiceLocator.Current.GetInstance<IContentTypeRepository>();
-
+            
+            CheckAccess();
             skippedContentCheckBoxList.Items.Clear();
 
-            var alphabeticalContentItems = _contentTypeRepository.List().OrderBy(t => t.LocalizedName).ToList();
+            var alphabeticalContentItems = ContentTypeRepository.List().OrderBy(t => t.LocalizedName).ToList();
 
             foreach (var contentType in alphabeticalContentItems)
             {
@@ -64,7 +71,7 @@ namespace PROJECT.EPiServerUI.Admin.Tools
         private void RepublishContentAndChildren(ContentReference reference, List<int> skippedContentTypeIds)
         {
             IContent content;
-            _contentRepository.TryGet(reference, out content);
+            ContentRepository.TryGet(reference, out content);
             var versionable = content as IVersionable;
 
             if (versionable != null &&
@@ -78,7 +85,7 @@ namespace PROJECT.EPiServerUI.Admin.Tools
 								
                     // this is the place where you do "something" with each of the content items you are going through
 
-                    _contentRepository.Save(clone, SaveAction.Publish);
+                    ContentRepository.Save(clone, SaveAction.Publish);
                 }
                 catch (Exception ex)
                 {
@@ -89,7 +96,7 @@ namespace PROJECT.EPiServerUI.Admin.Tools
             // don't publish content from recycle bin
             if (reference != ContentReference.WasteBasket)
             {
-                var children = _contentRepository.GetChildren<IContent>(reference).ToList();
+                var children = ContentRepository.GetChildren<IContent>(reference).ToList();
                 foreach (var child in children)
                 {
                     RepublishContentAndChildren(child.ContentLink, skippedContentTypeIds);
