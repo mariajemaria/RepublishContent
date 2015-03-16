@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace PROJECT.Web.EPiServerUI.Admin.Tools {
+namespace MarijasPlayground.EPiServerUI.Admin.Tools {
     
     
     public partial class RepublishPreviouslyPublishedContent {
@@ -29,6 +29,15 @@ namespace PROJECT.Web.EPiServerUI.Admin.Tools {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label doneLabel;
+        
+        /// <summary>
+        /// setDefaultValuesForPropertiesCheckBox control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox setDefaultValuesForPropertiesCheckBox;
         
         /// <summary>
         /// skippedContentCheckBoxList control.

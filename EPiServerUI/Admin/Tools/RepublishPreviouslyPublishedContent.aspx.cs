@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Web.UI.WebControls;
-using EPiServer;
 using EPiServer.Core;
-using EPiServer.Data.Entity;
-using EPiServer.DataAccess;
+using EPiServer.DataAbstraction;
 using EPiServer.PlugIn;
 using EPiServer.Security;
+using EPiServer.ServiceLocation;
 using EPiServer.Shell.WebForms;
 
-namespace PROJECT.EPiServerUI.Admin.Tools
+namespace MarijasPlayground.EPiServerUI.Admin.Tools
 {
     [GuiPlugIn(
         DisplayName = "Re-publish content",
@@ -20,6 +19,8 @@ namespace PROJECT.EPiServerUI.Admin.Tools
         Url = "~/EPiServerUI/Admin/Tools/RepublishPreviouslyPublishedContent.aspx")]
     public partial class RepublishPreviouslyPublishedContent : ContentWebFormsBase
     {
+        private IContentTypeRepository _contentTypeRepo;
+
         public override AccessLevel RequiredAccess()
         {
             return AccessLevel.Administer;
@@ -36,11 +37,13 @@ namespace PROJECT.EPiServerUI.Admin.Tools
         protected override void OnInit(EventArgs e)
         {
             EnableViewState = false;
-            
+
+            _contentTypeRepo = ServiceLocator.Current.GetInstance<IContentTypeRepository>();
+
             CheckAccess();
             skippedContentCheckBoxList.Items.Clear();
-
-            var alphabeticalContentItems = ContentTypeRepository.List().OrderBy(t => t.LocalizedName).ToList();
+            
+            var alphabeticalContentItems = _contentTypeRepo.List().OrderBy(t => t.LocalizedName).ToList();
 
             foreach (var contentType in alphabeticalContentItems)
             {
@@ -63,45 +66,18 @@ namespace PROJECT.EPiServerUI.Admin.Tools
                 }
             }
 
-            RepublishContentAndChildren(ContentReference.RootPage, skippedContentTypeIds);
+            var inputForRepublish = new RepublishContentInput
+            {
+                FromReference = ContentReference.RootPage,
+                ContentTypeIdsToSkip = skippedContentTypeIds,
+                SetDefaultValuesForEmptyRequiredProperties = setDefaultValuesForPropertiesCheckBox.Checked
+            };
+
+            var republishContentHelper = ServiceLocator.Current.GetInstance<IRepublishContentHelper>();
+            republishContentHelper.RepublishContentAndChildren(inputForRepublish);
 
             doneLabel.Visible = true;
         }
 
-        private void RepublishContentAndChildren(ContentReference reference, List<int> skippedContentTypeIds)
-        {
-            IContent content;
-            ContentRepository.TryGet(reference, out content);
-            var versionable = content as IVersionable;
-
-            if (versionable != null &&
-                versionable.StartPublish <= DateTime.Now &&
-                !versionable.IsPendingPublish &&
-                !skippedContentTypeIds.Contains(content.ContentTypeID))
-            {
-                try
-                {
-                    var clone = ((IReadOnly)content).CreateWritableClone() as IContent;
-								
-                    // this is the place where you do "something" with each of the content items you are going through
-
-                    ContentRepository.Save(clone, SaveAction.Publish);
-                }
-                catch (Exception ex)
-                {
-                    // add logging here
-                }
-            }
-
-            // don't publish content from recycle bin
-            if (reference != ContentReference.WasteBasket)
-            {
-                var children = ContentRepository.GetChildren<IContent>(reference).ToList();
-                foreach (var child in children)
-                {
-                    RepublishContentAndChildren(child.ContentLink, skippedContentTypeIds);
-                }
-            }
-        }
     }
 }

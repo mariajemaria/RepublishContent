@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="RepublishPreviouslyPublishedContent.aspx.cs" Inherits="PROJECT.Web.EPiServerUI.Admin.Tools.RepublishPreviouslyPublishedContent" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="RepublishPreviouslyPublishedContent.aspx.cs" Inherits="MarijasPlayground.EPiServerUI.Admin.Tools.RepublishPreviouslyPublishedContent" %>
 
 <!DOCTYPE html>
 
@@ -16,6 +16,10 @@
                 <br/>
             </p>
             
+            <p>
+                <asp:CheckBox runat="server" ID="setDefaultValuesForPropertiesCheckBox" Text="Set default values of required properties that are empty (and have a default value defined)" />
+            </p>
+
             <p>Skip the following content types:</p>
             
             <input type="checkbox" class="js-toggle-all-page-types" value="Toggle all/none" /> <strong>Toggle all/none</strong>
