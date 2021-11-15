@@ -29,7 +29,7 @@
 
         </div>
     </form>
-    <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             $(".js-toggle-all-page-types").change(function () {
